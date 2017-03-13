@@ -5,7 +5,9 @@ import javafx.beans.property.ObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
@@ -20,9 +22,6 @@ import java.util.concurrent.TimeUnit;
  */
 public class VideoHandler {
 
-    private VideoCapture videoCapture = new VideoCapture();
-    private ScheduledExecutorService timer;
-    private Mat mat = new Mat();
 
     protected static Image toFxImage(Mat mat) {
         return SwingFXUtils.toFXImage(matToBufferedImage(mat), null);
@@ -50,33 +49,5 @@ public class VideoHandler {
         return image;
     }
 
-    protected void bootCamera(Controller controller) {
 
-        videoCapture.open(0);
-
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                Mat image = getMat();
-                toFxImage(image);
-                onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
-
-            }
-
-        };
-        timer = Executors.newSingleThreadScheduledExecutor();
-        timer.scheduleAtFixedRate(runnable, 0, 33, TimeUnit.MILLISECONDS);
-
-    }
-
-    private Mat getMat() {
-        videoCapture.read(this.mat);
-        return mat;
-    }
-
-    protected void stopCamera() throws InterruptedException {
-        this.timer.shutdown();
-        this.timer.awaitTermination(33, TimeUnit.MILLISECONDS);
-        this.videoCapture.release();
-    }
 }

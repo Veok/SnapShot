@@ -8,7 +8,6 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import org.opencv.core.Core;
 
-
 public class SnapShot extends Application {
 
     @Override
@@ -16,15 +15,15 @@ public class SnapShot extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MainStage.fxml"));
         primaryStage.setTitle("SnapShot");
         primaryStage.setScene(new Scene(fxmlLoader.load(), 620, 455));
-        VideoHandler videoHandler = new VideoHandler();
         primaryStage.show();
-        videoHandler.bootCamera(fxmlLoader.getController());
+        Controller controller = new Controller();
+        controller.bootCamera(fxmlLoader.getController());
 
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
                 try {
-                    videoHandler.stopCamera();
+                    controller.stopCamera();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
