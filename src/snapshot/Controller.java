@@ -25,6 +25,7 @@ public class Controller {
     private VideoCapture videoCapture = new VideoCapture();
     private ScheduledExecutorService timer;
     private Mat mat = new Mat();
+    private volatile boolean isRunning;
     @FXML
     private ImageView frame;
     @FXML
@@ -41,45 +42,52 @@ public class Controller {
     @FXML
     protected void takeSnapShot() {
         if (videoCapture.isOpened()) {
+            isRunning = false;
+            bootCamera(this);
             Date date = new Date();
             String formattedDate = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(date);
-            videoCapture.open(0);
+            isRunning = true;
+            bootCamera(this);
             Imgcodecs.imwrite("snapshot-" + formattedDate + ".png", getMat());
         } else {
-
+            System.err.print("Camera is Off\n");
         }
 
     }
 
     @FXML
-    protected void turnNormalFilter() throws InterruptedException {
+    protected void turnNormalFilter() {
+        isRunning = false;
         if (videoCapture.isOpened()) {
-            videoCapture.release();
+            bootCamera(this);
         }
         setColorId(Imgproc.COLOR_RGBA2RGB);
+        isRunning = true;
         bootCamera(this);
 
 
     }
 
     @FXML
-    protected void turnBlackWhiteFilter() throws InterruptedException {
+    protected void turnBlackWhiteFilter() {
+        isRunning = false;
         if (videoCapture.isOpened()) {
-            videoCapture.release();
+            bootCamera(this);
         }
         setColorId(Imgproc.COLOR_RGBA2GRAY);
+        isRunning = true;
         bootCamera(this);
 
 
     }
 
     @FXML
-    protected void turnSuperFilter() throws InterruptedException {
-
-
+    protected void turnSuperFilter() {
+        isRunning = false;
         if (videoCapture.isOpened()) {
-            videoCapture.release();
+            bootCamera(this);
         }
+        isRunning = true;
         setColorId(Imgproc.COLOR_RGB2HSV);
         bootCamera(this);
 
@@ -90,28 +98,29 @@ public class Controller {
         return frame;
     }
 
-    protected void bootCamera(Controller controller) throws InterruptedException {
+    protected void bootCamera(Controller controller) {
         videoCapture.open(0);
-        setTimer(runTask(controller));
+        runTask(controller);
 
     }
 
 
-    private Runnable runTask(Controller controller) {
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                Mat image = getMat();
-                toFxImage(image);
-                onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
-            }
-        };
-        return runnable;
-    }
-
-    private void setTimer(Runnable runnable) {
-        timer = Executors.newSingleThreadScheduledExecutor();
-        timer.scheduleAtFixedRate(runnable, 0, 33, TimeUnit.MILLISECONDS);
+    private void runTask(Controller controller) {
+        if (isRunning) {
+            Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    Mat image = getMat();
+                    toFxImage(image);
+                    onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
+                }
+            };
+            timer = Executors.newSingleThreadScheduledExecutor();
+            timer.scheduleAtFixedRate(runnable, 0, 33, TimeUnit.MILLISECONDS);
+        } else {
+            timer.shutdown();
+            videoCapture.release();
+        }
     }
 
 
@@ -121,6 +130,13 @@ public class Controller {
         return mat;
     }
 
+    public boolean isRunning() {
+        return isRunning;
+    }
+
+    public void setRunning(boolean running) {
+        isRunning = running;
+    }
 
     public int getColorId() {
         return colorId;
