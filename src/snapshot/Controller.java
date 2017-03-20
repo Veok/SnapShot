@@ -81,9 +81,10 @@ public class Controller {
                 @Override
                 public void run() {
                     Mat image = getMat();
-                    faceDetection();
                     toFxImage(image);
+                    faceDetection();
                     onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
+
                 }
             };
             timer = Executors.newSingleThreadScheduledExecutor();
@@ -101,9 +102,7 @@ public class Controller {
             Imgproc.cvtColor(mat, mat2, getColorId());
             return mat2;
         } else {
-
             Imgproc.cvtColor(mat, mat, getColorId());
-
         }
         return mat;
     }
@@ -112,21 +111,37 @@ public class Controller {
         setRunning(false);
         if (videoCapture.isOpened())
             bootCamera(this);
+
     }
 
     private void faceDetection() {
-        MatOfRect faces = new MatOfRect();
         Mat mat3 = new Mat();
-        Imgproc.cvtColor(getMat(), mat3, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.equalizeHist(mat3, mat3);
+        MatOfRect faces = new MatOfRect();
         CascadeClassifier cascadeClassifier = new CascadeClassifier();
-        cascadeClassifier.load("haarcascade_frontalface_alt.xml");
-        cascadeClassifier.detectMultiScale(mat3, faces, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
-        Rect[] facesArray = faces.toArray();
-        for (int i = 0; i < facesArray.length; i++)
-            Imgproc.rectangle(getMat(), facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0, 255), 3);
+        cascadeClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty1\\SnapShot\\src\\snapshot\\haarcascade_frontalface_alt.xml");
+        if (getMat().channels() > 1) {
+            Imgproc.cvtColor(getMat(), mat3, Imgproc.COLOR_BGR2GRAY);
+            showFace(mat3, cascadeClassifier, faces);
+            printRectangle(faces, getMat());
+        } else {
+            showFace(getMat(), cascadeClassifier, faces);
+            printRectangle(faces, getMat());
+        }
 
     }
+
+    private void showFace(Mat obtainedMat, CascadeClassifier obtainedClassifier, MatOfRect faces) {
+        Imgproc.equalizeHist(obtainedMat, obtainedMat);
+        obtainedClassifier.detectMultiScale(obtainedMat, faces, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
+
+    }
+
+    private void printRectangle(MatOfRect faces, Mat obtainedMat) {
+        Rect[] facesArray = faces.toArray();
+        for (Rect aFacesArray : facesArray)
+            Imgproc.rectangle(obtainedMat, aFacesArray.tl(), aFacesArray.br(), new Scalar(0, 255, 0, 255), 3);
+    }
+
 
     public ImageView getFrame() {
         return frame;
@@ -147,4 +162,5 @@ public class Controller {
     public void setColorId(int colorId) {
         this.colorId = colorId;
     }
+
 }
