@@ -4,6 +4,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
 import org.opencv.imgcodecs.Imgcodecs;
@@ -13,6 +14,7 @@ import org.opencv.videoio.VideoCapture;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,21 +24,14 @@ import static snapshot.VideoHandler.toFxImage;
 
 public class Controller {
 
-    private VideoCapture videoCapture = new VideoCapture();
-    private ScheduledExecutorService timer;
-    private Mat mat = new Mat();
-    private volatile boolean isRunning;
+
     @FXML
     private ImageView frame;
-    @FXML
-    private Button snapShot;
-    @FXML
-    private MenuItem normalFilter;
-    @FXML
-    private MenuItem blackWhiteFilter;
-    @FXML
-    private MenuItem superFilter;
 
+    private VideoCapture videoCapture = new VideoCapture();
+    private ScheduledExecutorService timer;
+    private Mat mat;
+    private volatile boolean isRunning;
     private int colorId;
 
     @FXML
@@ -64,8 +59,6 @@ public class Controller {
         setColorId(Imgproc.COLOR_RGBA2RGB);
         isRunning = true;
         bootCamera(this);
-
-
     }
 
     @FXML
@@ -77,8 +70,6 @@ public class Controller {
         setColorId(Imgproc.COLOR_RGBA2GRAY);
         isRunning = true;
         bootCamera(this);
-
-
     }
 
     @FXML
@@ -90,8 +81,6 @@ public class Controller {
         isRunning = true;
         setColorId(Imgproc.COLOR_RGB2HSV);
         bootCamera(this);
-
-
     }
 
     public ImageView getFrame() {
@@ -100,12 +89,6 @@ public class Controller {
 
     protected void bootCamera(Controller controller) {
         videoCapture.open(0);
-        runTask(controller);
-
-    }
-
-
-    private void runTask(Controller controller) {
         if (isRunning) {
             Runnable runnable = new Runnable() {
                 @Override
@@ -120,15 +103,17 @@ public class Controller {
         } else {
             timer.shutdown();
             videoCapture.release();
+            mat.release();
         }
     }
 
-
     private Mat getMat() {
-        videoCapture.read(this.mat);
-        Imgproc.cvtColor(this.mat, this.mat, getColorId());
+        this.mat = new Mat();
+        videoCapture.read(mat);
+        Imgproc.cvtColor(mat, mat, getColorId());
         return mat;
     }
+
 
     public boolean isRunning() {
         return isRunning;
