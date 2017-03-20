@@ -1,21 +1,18 @@
 package snapshot;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
+import org.opencv.core.*;
 
-import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.objdetect.CascadeClassifier;
+import org.opencv.objdetect.Objdetect;
 import org.opencv.videoio.VideoCapture;
 
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -39,11 +36,10 @@ public class Controller {
     @FXML
     protected void takeSnapShot() {
         if (videoCapture.isOpened()) {
-            isRunning = false;
-            bootCamera(this);
+            resetCamera();
             Date date = new Date();
             String formattedDate = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(date);
-            isRunning = true;
+            setRunning(true);
             bootCamera(this);
             Imgcodecs.imwrite("snapshot-" + formattedDate + ".png", getMat());
         } else {
@@ -54,49 +50,38 @@ public class Controller {
 
     @FXML
     protected void turnNormalFilter() {
-        isRunning = false;
-        if (videoCapture.isOpened()) {
-            bootCamera(this);
-        }
+        resetCamera();
         setColorId(Imgproc.COLOR_RGBA2RGB);
-        isRunning = true;
+        setRunning(true);
         bootCamera(this);
     }
 
     @FXML
     protected void turnBlackWhiteFilter() {
-        isRunning = false;
-        if (videoCapture.isOpened()) {
-            bootCamera(this);
-        }
+        resetCamera();
         setColorId(Imgproc.COLOR_BGR2GRAY);
-        isRunning = true;
+        setRunning(true);
         bootCamera(this);
 
     }
 
     @FXML
     protected void turnSuperFilter() {
-        isRunning = false;
-        if (videoCapture.isOpened()) {
-            bootCamera(this);
-        }
-        isRunning = true;
+        resetCamera();
+        setRunning(true);
         setColorId(Imgproc.COLOR_RGB2HSV);
         bootCamera(this);
     }
 
-    public ImageView getFrame() {
-        return frame;
-    }
 
-    protected void bootCamera(Controller controller) {
+    void bootCamera(Controller controller) {
         videoCapture.open(0);
         if (isRunning) {
             Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
                     Mat image = getMat();
+                    faceDetection();
                     toFxImage(image);
                     onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
                 }
@@ -112,15 +97,44 @@ public class Controller {
 
     private Mat getMat() {
         videoCapture.read(mat);
-        if(this.mat.channels() > 1){
-        Imgproc.cvtColor(mat, mat2, getColorId());
-        return mat2; }
-        else{
-            Imgproc.cvtColor(mat, mat,getColorId());
+        if (this.mat.channels() > 1) {
+            Imgproc.cvtColor(mat, mat2, getColorId());
+            return mat2;
+        } else {
+
+            Imgproc.cvtColor(mat, mat, getColorId());
+
         }
         return mat;
     }
 
+    private void resetCamera() {
+        setRunning(false);
+        if (videoCapture.isOpened())
+            bootCamera(this);
+    }
+
+    private void faceDetection() {
+        MatOfRect faces = new MatOfRect();
+        Mat mat3 = new Mat();
+        Imgproc.cvtColor(getMat(), mat3, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.equalizeHist(mat3, mat3);
+        CascadeClassifier cascadeClassifier = new CascadeClassifier();
+        cascadeClassifier.load("haarcascade_frontalface_alt.xml");
+        cascadeClassifier.detectMultiScale(mat3, faces, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
+        Rect[] facesArray = faces.toArray();
+        for (int i = 0; i < facesArray.length; i++)
+            Imgproc.rectangle(getMat(), facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0, 255), 3);
+
+    }
+
+    public ImageView getFrame() {
+        return frame;
+    }
+
+    public int getColorId() {
+        return colorId;
+    }
 
     public boolean isRunning() {
         return isRunning;
@@ -128,10 +142,6 @@ public class Controller {
 
     public void setRunning(boolean running) {
         isRunning = running;
-    }
-
-    public int getColorId() {
-        return colorId;
     }
 
     public void setColorId(int colorId) {
