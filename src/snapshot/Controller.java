@@ -7,6 +7,7 @@ import javafx.scene.image.ImageView;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 
+import org.opencv.core.Rect;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
@@ -30,7 +31,8 @@ public class Controller {
 
     private VideoCapture videoCapture = new VideoCapture();
     private ScheduledExecutorService timer;
-    private Mat mat;
+    private Mat mat = new Mat();
+    private Mat mat2 = new Mat();
     private volatile boolean isRunning;
     private int colorId;
 
@@ -67,9 +69,10 @@ public class Controller {
         if (videoCapture.isOpened()) {
             bootCamera(this);
         }
-        setColorId(Imgproc.COLOR_RGBA2GRAY);
+        setColorId(Imgproc.COLOR_BGR2GRAY);
         isRunning = true;
         bootCamera(this);
+
     }
 
     @FXML
@@ -103,14 +106,18 @@ public class Controller {
         } else {
             timer.shutdown();
             videoCapture.release();
-            mat.release();
         }
     }
 
+
     private Mat getMat() {
-        this.mat = new Mat();
         videoCapture.read(mat);
-        Imgproc.cvtColor(mat, mat, getColorId());
+        if(this.mat.channels() > 1){
+        Imgproc.cvtColor(mat, mat2, getColorId());
+        return mat2; }
+        else{
+            Imgproc.cvtColor(mat, mat,getColorId());
+        }
         return mat;
     }
 
