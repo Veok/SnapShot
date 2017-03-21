@@ -33,14 +33,15 @@ public class Controller {
     private volatile boolean isRunning;
     private int colorId;
 
+
     @FXML
     protected void takeSnapShot() {
         if (videoCapture.isOpened()) {
-            resetCamera();
+            turnOffCamera();
             Date date = new Date();
             String formattedDate = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss").format(date);
             setRunning(true);
-            bootCamera(this);
+            initializeCamera(this);
             Imgcodecs.imwrite("snapshot-" + formattedDate + ".png", getMat());
         } else {
             System.err.print("Camera is Off\n");
@@ -50,31 +51,31 @@ public class Controller {
 
     @FXML
     protected void turnNormalFilter() {
-        resetCamera();
+        turnOffCamera();
         setColorId(Imgproc.COLOR_RGBA2RGB);
         setRunning(true);
-        bootCamera(this);
+        initializeCamera(this);
     }
 
     @FXML
     protected void turnBlackWhiteFilter() {
-        resetCamera();
+        turnOffCamera();
         setColorId(Imgproc.COLOR_BGR2GRAY);
         setRunning(true);
-        bootCamera(this);
+        initializeCamera(this);
 
     }
 
     @FXML
     protected void turnSuperFilter() {
-        resetCamera();
+        turnOffCamera();
         setRunning(true);
         setColorId(Imgproc.COLOR_RGB2HSV);
-        bootCamera(this);
+        initializeCamera(this);
     }
 
 
-    void bootCamera(Controller controller) {
+    void initializeCamera(Controller controller) {
         videoCapture.open(0);
         if (isRunning) {
             Runnable runnable = new Runnable() {
@@ -107,39 +108,42 @@ public class Controller {
         return mat;
     }
 
-    private void resetCamera() {
+    private void turnOffCamera() {
         setRunning(false);
         if (videoCapture.isOpened())
-            bootCamera(this);
+            initializeCamera(this);
 
     }
 
     private void faceDetection() {
-        Mat mat3 = new Mat();
-        MatOfRect faces = new MatOfRect();
+        Mat grayMat = new Mat();
+        MatOfRect matOfRect = new MatOfRect();
         CascadeClassifier cascadeClassifier = new CascadeClassifier();
-        cascadeClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty1\\SnapShot\\src\\snapshot\\haarcascade_frontalface_alt.xml");
+        cascadeClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty" +
+                "\\SnapShot\\src\\snapshot\\haarcascade_frontalface_alt.xml");
         if (getMat().channels() > 1) {
-            Imgproc.cvtColor(getMat(), mat3, Imgproc.COLOR_BGR2GRAY);
-            showFace(mat3, cascadeClassifier, faces);
-            printRectangle(faces, getMat());
+            Imgproc.cvtColor(getMat(), grayMat, Imgproc.COLOR_BGR2GRAY);
+            showFace(grayMat, cascadeClassifier, matOfRect);
+            printRectangle(matOfRect, getMat());
         } else {
-            showFace(getMat(), cascadeClassifier, faces);
-            printRectangle(faces, getMat());
+            showFace(getMat(), cascadeClassifier, matOfRect);
+            printRectangle(matOfRect, getMat());
         }
 
     }
 
-    private void showFace(Mat obtainedMat, CascadeClassifier obtainedClassifier, MatOfRect faces) {
+    private void showFace(Mat obtainedMat, CascadeClassifier obtainedClassifier, MatOfRect matOfRect) {
         Imgproc.equalizeHist(obtainedMat, obtainedMat);
-        obtainedClassifier.detectMultiScale(obtainedMat, faces, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
+        obtainedClassifier.detectMultiScale(obtainedMat, matOfRect, 1.1, 2,
+                Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
 
     }
 
     private void printRectangle(MatOfRect faces, Mat obtainedMat) {
         Rect[] facesArray = faces.toArray();
         for (Rect aFacesArray : facesArray)
-            Imgproc.rectangle(obtainedMat, aFacesArray.tl(), aFacesArray.br(), new Scalar(0, 255, 0, 255), 3);
+            Imgproc.rectangle(obtainedMat, aFacesArray.tl(), aFacesArray.br(),
+                    new Scalar(0, 255, 0, 255), 3);
     }
 
 

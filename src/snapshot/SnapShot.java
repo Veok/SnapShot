@@ -22,7 +22,7 @@ public class SnapShot extends Application {
                 Controller controller = fxmlLoader.getController();
                 if (controller.isRunning()) {
                     controller.setRunning(false);
-                    controller.bootCamera(controller);
+                    controller.initializeCamera(controller);
                 }
                 System.exit(0);
             }
