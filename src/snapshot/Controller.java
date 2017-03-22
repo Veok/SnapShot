@@ -17,6 +17,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import static snapshot.VideoHandler.imageOverImageBGRA;
 import static snapshot.VideoHandler.onFXThread;
 import static snapshot.VideoHandler.toFxImage;
 
@@ -118,16 +119,20 @@ public class Controller {
     private void faceDetection() {
         Mat grayMat = new Mat();
         MatOfRect matOfRect = new MatOfRect();
-        CascadeClassifier cascadeClassifier = new CascadeClassifier();
-        cascadeClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty" +
+        CascadeClassifier faceClassifier = new CascadeClassifier();
+        faceClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty" +
                 "\\SnapShot\\src\\snapshot\\haarcascade_frontalface_alt.xml");
+        CascadeClassifier eyesClassifier = new CascadeClassifier();
+        eyesClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty\\" +
+                "SnapShot\\src\\snapshot\\haarcascade_eye_tree_eyeglasses.xml");
+
         if (getMat().channels() > 1) {
             Imgproc.cvtColor(getMat(), grayMat, Imgproc.COLOR_BGR2GRAY);
-            showFace(grayMat, cascadeClassifier, matOfRect);
-            printRectangle(matOfRect, getMat());
+            showFace(grayMat, faceClassifier, matOfRect);
+            printRectangleOnFace(matOfRect, getMat());
         } else {
-            showFace(getMat(), cascadeClassifier, matOfRect);
-            printRectangle(matOfRect, getMat());
+            showFace(getMat(), faceClassifier, matOfRect);
+            printRectangleOnFace(matOfRect, getMat());
         }
 
     }
@@ -136,14 +141,21 @@ public class Controller {
         Imgproc.equalizeHist(obtainedMat, obtainedMat);
         obtainedClassifier.detectMultiScale(obtainedMat, matOfRect, 1.1, 2,
                 Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
+        printGlassesOnEyes(obtainedClassifier,matOfRect,obtainedMat);
 
     }
 
-    private void printRectangle(MatOfRect faces, Mat obtainedMat) {
+    private void printRectangleOnFace(MatOfRect faces, Mat obtainedMat) {
         Rect[] facesArray = faces.toArray();
         for (Rect aFacesArray : facesArray)
             Imgproc.rectangle(obtainedMat, aFacesArray.tl(), aFacesArray.br(),
                     new Scalar(0, 255, 0, 255), 3);
+    }
+
+    private void printGlassesOnEyes(CascadeClassifier cascadeClassifier,MatOfRect matOfRect, Mat mat){
+        cascadeClassifier.detectMultiScale(mat,matOfRect,1.1,2,Objdetect.CASCADE_SCALE_IMAGE,
+                new Size(30, 30), new Size() );
+        imageOverImageBGRA(Imgcodecs.imread("dwi.png"),mat,new MatOfPoint2f());
     }
 
 
