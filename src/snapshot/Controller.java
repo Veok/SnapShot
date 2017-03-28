@@ -154,20 +154,20 @@ public class Controller {
             CascadeClassifier cascadeClassifier = new CascadeClassifier();
             MatOfRect eyesMatOfRect = new MatOfRect();
             Rect[] eyes2 = eyesMatOfRect.toArray();
+            cascadeClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty\\SnapShot\\src\\snapshot\\haarcascade_eye_tree_eyeglasses.xml");
             cascadeClassifier.detectMultiScale(obtainedMat, eyesMatOfRect, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE,
                     new Size(30, 30), new Size());
 
             if (eyes2.length > 0) {
                 MatOfPoint2f dst = new MatOfPoint2f();
                 MatOfPoint2f helpVariable = new MatOfPoint2f();
-
-                helpVariable.get(aFacesArray.x, aFacesArray.y + (aFacesArray.height * 5 / 20));
+                helpVariable.put(aFacesArray.x, aFacesArray.y + (aFacesArray.height * 5 / 20));
                 dst.push_back(helpVariable);
-                helpVariable.get(aFacesArray.x + aFacesArray.width, aFacesArray.y + aFacesArray.height * 5 / 20);
+                helpVariable.put(aFacesArray.x + aFacesArray.width, aFacesArray.y + aFacesArray.height * 5 / 20);
                 dst.push_back(helpVariable);
-                helpVariable.get(aFacesArray.x + aFacesArray.width, aFacesArray.y + aFacesArray.height * 5 / 20 + aFacesArray.height * 3 / 10);
+                helpVariable.put(aFacesArray.x + aFacesArray.width, aFacesArray.y + aFacesArray.height * 5 / 20 + aFacesArray.height * 3 / 10);
                 dst.push_back(helpVariable);
-                helpVariable.get(aFacesArray.x, aFacesArray.y + aFacesArray.height * 5 / 20 + aFacesArray.height * 3 / 10);
+                helpVariable.put(aFacesArray.x, aFacesArray.y + aFacesArray.height * 5 / 20 + aFacesArray.height * 3 / 10);
                 dst.push_back(helpVariable);
 
                 drawImageOverSecondImage(glasses.clone(), obtainedMat, dst);

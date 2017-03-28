@@ -53,17 +53,16 @@ public class VideoHandler {
         Mat blank = new Mat(srcMat.rows(), srcMat.cols(), srcMat.type());
 
         MatOfPoint2f helpVariable = new MatOfPoint2f();
-        helpVariable.get(0, 0);
+        helpVariable.put(0, 0);
         src.push_back(helpVariable);
-        helpVariable.get(srcMat.cols(), 0);
+        helpVariable.put(srcMat.cols(), 0);
         src.push_back(helpVariable);
-        helpVariable.get(srcMat.cols(), srcMat.rows());
+        helpVariable.put(srcMat.cols(), srcMat.rows());
         src.push_back(helpVariable);
-        helpVariable.get(0, srcMat.rows());
+        helpVariable.put(0, srcMat.rows());
         src.push_back(helpVariable);
 
-        Mat warpMatrix = new Mat();
-        warpMatrix = Imgproc.getPerspectiveTransform(src, dst);
+        Mat warpMatrix = Imgproc.getPerspectiveTransform(src, dst);
         Core.split(srcMat, rgbaChannels);
 
         rgbaChannels.set(0, rgbaChannels.get(3));
