@@ -10,7 +10,7 @@ import org.opencv.imgproc.Imgproc;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Lelental on 12.03.2017.
@@ -44,20 +44,40 @@ public class VideoHandler {
         return image;
     }
 
-    protected static void imageOverImageBGRA(Mat sourceMat, Mat destinationMat, MatOfPoint2f destination){
+    public static void drawImageOverSecondImage(Mat srcMat, Mat dstMat, MatOfPoint2f dst) {
 
-        MatOfPoint2f source = new MatOfPoint2f();
-        Mat mat = new Mat();
-        mat.checkVector(4);
-        Mat cpyImg = new Mat(destinationMat.rows(),destinationMat.cols(),destinationMat.type());
-        Mat negImg = new Mat(destinationMat.rows(),destinationMat.cols(),destinationMat.type());
-        Mat blank = new Mat(sourceMat.rows(), sourceMat.cols(), sourceMat.type());
-        Mat warpMatrix= Imgproc.getPerspectiveTransform(sourceMat,destinationMat);
-        Core.split(sourceMat, (List<Mat>) mat);
-        Imgproc.warpPerspective(sourceMat,negImg,warpMatrix,new Size(negImg.cols(),negImg.rows()));
-        Imgproc.warpPerspective(blank,cpyImg,warpMatrix,new Size(cpyImg.cols(),cpyImg.rows()));
+        MatOfPoint2f src = new MatOfPoint2f();
+        ArrayList<Mat> rgbaChannels = new ArrayList<>(4);
+        Mat cpyImg = new Mat(dstMat.rows(), dstMat.cols(), dstMat.type());
+        Mat negImg = new Mat(dstMat.rows(), dstMat.cols(), dstMat.type());
+        Mat blank = new Mat(srcMat.rows(), srcMat.cols(), srcMat.type());
 
+        MatOfPoint2f helpVariable = new MatOfPoint2f();
+        helpVariable.get(0, 0);
+        src.push_back(helpVariable);
+        helpVariable.get(srcMat.cols(), 0);
+        src.push_back(helpVariable);
+        helpVariable.get(srcMat.cols(), srcMat.rows());
+        src.push_back(helpVariable);
+        helpVariable.get(0, srcMat.rows());
+        src.push_back(helpVariable);
+
+        Mat warpMatrix = new Mat();
+        warpMatrix = Imgproc.getPerspectiveTransform(src, dst);
+        Core.split(srcMat, rgbaChannels);
+
+        rgbaChannels.set(0, rgbaChannels.get(3));
+        rgbaChannels.set(1, rgbaChannels.get(3));
+        rgbaChannels.set(2, rgbaChannels.get(3));
+        rgbaChannels.remove(rgbaChannels.size() - 1);
+        Core.merge(rgbaChannels, blank);
+
+        Imgproc.warpPerspective(srcMat, negImg, warpMatrix, new Size(negImg.cols(), negImg.rows()));
+        Imgproc.warpPerspective(blank, cpyImg, warpMatrix, new Size(cpyImg.cols(), negImg.rows()));
+        dstMat.setTo(cpyImg);
+        rgbaChannels = new ArrayList<>(3);
+        Core.merge(rgbaChannels, negImg);
+        negImg.mul(cpyImg);
+        dstMat.setTo(negImg);
     }
-
-
 }
