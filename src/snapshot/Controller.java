@@ -10,15 +10,12 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 import org.opencv.videoio.VideoCapture;
 
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import static snapshot.VideoHandler.drawImageOverSecondImage;
-import static snapshot.VideoHandler.onFXThread;
 import static snapshot.VideoHandler.toFxImage;
 
 public class Controller {
@@ -84,8 +81,8 @@ public class Controller {
                 public void run() {
                     Mat image = getMat();
                     toFxImage(image);
-                    faceDetection();
-                    onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
+                    initializeDetection();
+                    VideoHandler.onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
 
                 }
             };
@@ -116,62 +113,33 @@ public class Controller {
 
     }
 
-    private void faceDetection() {
+    private void initializeDetection() {
         Mat grayMat = new Mat();
-        MatOfRect matOfRect = new MatOfRect();
+        MatOfRect faces = new MatOfRect();
         CascadeClassifier faceClassifier = new CascadeClassifier();
         faceClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty" +
                 "\\SnapShot\\src\\snapshot\\haarcascade_frontalface_alt.xml");
 
-
         if (getMat().channels() > 1) {
             Imgproc.cvtColor(getMat(), grayMat, Imgproc.COLOR_BGR2GRAY);
-            showFace(grayMat, faceClassifier, matOfRect);
-            printRectangleOnFace(matOfRect, getMat());
+            detectFace(grayMat, faceClassifier, faces);
 
         } else {
-            showFace(getMat(), faceClassifier, matOfRect);
-            printRectangleOnFace(matOfRect, getMat());
+            detectFace(getMat(), faceClassifier, faces);
         }
 
     }
 
-    private void showFace(Mat obtainedMat, CascadeClassifier obtainedClassifier, MatOfRect matOfRect) {
+    private void detectFace(Mat obtainedMat, CascadeClassifier obtainedClassifier, MatOfRect faces) {
+
         Imgproc.equalizeHist(obtainedMat, obtainedMat);
-        obtainedClassifier.detectMultiScale(obtainedMat, matOfRect, 1.1, 2,
+        obtainedClassifier.detectMultiScale(obtainedMat, faces, 1.1, 2,
                 Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30), new Size());
 
-    }
-
-    private void printRectangleOnFace(MatOfRect faces, Mat obtainedMat) {
         Rect[] facesArray = faces.toArray();
-        Mat glasses = Imgcodecs.imread("C:\\Users\\Lelental\\OneDrive\\Dokumenty\\SnapShot\\src\\snapshot\\dwi.png");
-
         for (Rect aFacesArray : facesArray) {
-            Imgproc.rectangle(obtainedMat, aFacesArray.tl(), aFacesArray.br(),
+            Imgproc.rectangle(getMat(), aFacesArray.tl(), aFacesArray.br(),
                     new Scalar(0, 255, 0, 255), 3);
-
-            CascadeClassifier cascadeClassifier = new CascadeClassifier();
-            MatOfRect eyesMatOfRect = new MatOfRect();
-            Rect[] eyes2 = eyesMatOfRect.toArray();
-            cascadeClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty\\SnapShot\\src\\snapshot\\haarcascade_eye_tree_eyeglasses.xml");
-            cascadeClassifier.detectMultiScale(obtainedMat, eyesMatOfRect, 1.1, 2, Objdetect.CASCADE_SCALE_IMAGE,
-                    new Size(30, 30), new Size());
-
-            if (eyes2.length > 0) {
-                MatOfPoint2f dst = new MatOfPoint2f();
-                MatOfPoint2f helpVariable = new MatOfPoint2f();
-                helpVariable.put(aFacesArray.x, aFacesArray.y + (aFacesArray.height * 5 / 20));
-                dst.push_back(helpVariable);
-                helpVariable.put(aFacesArray.x + aFacesArray.width, aFacesArray.y + aFacesArray.height * 5 / 20);
-                dst.push_back(helpVariable);
-                helpVariable.put(aFacesArray.x + aFacesArray.width, aFacesArray.y + aFacesArray.height * 5 / 20 + aFacesArray.height * 3 / 10);
-                dst.push_back(helpVariable);
-                helpVariable.put(aFacesArray.x, aFacesArray.y + aFacesArray.height * 5 / 20 + aFacesArray.height * 3 / 10);
-                dst.push_back(helpVariable);
-
-                drawImageOverSecondImage(glasses.clone(), obtainedMat, dst);
-            }
         }
     }
 
