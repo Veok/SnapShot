@@ -76,15 +76,12 @@ public class Controller {
     void initializeCamera(Controller controller) {
         videoCapture.open(0);
         if (isRunning) {
-            Runnable runnable = new Runnable() {
-                @Override
-                public void run() {
-                    Mat image = getMat();
-                    toFxImage(image);
-                    initializeDetection();
-                    VideoHandler.onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
+            Runnable runnable = () -> {
+                Mat image = getMat();
+                toFxImage(image);
+                initializeDetection();
+                VideoHandler.onFXThread(controller.getFrame().imageProperty(), toFxImage(image));
 
-                }
             };
             timer = Executors.newSingleThreadScheduledExecutor();
             timer.scheduleAtFixedRate(runnable, 0, 33, TimeUnit.MILLISECONDS);

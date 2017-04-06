@@ -16,16 +16,13 @@ public class SnapShot extends Application {
         primaryStage.setTitle("SnapShot");
         primaryStage.setScene(new Scene(fxmlLoader.load(), 620, 455));
         primaryStage.show();
-        primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-            @Override
-            public void handle(WindowEvent event) {
-                Controller controller = fxmlLoader.getController();
-                if (controller.isRunning()) {
-                    controller.setRunning(false);
-                    controller.initializeCamera(controller);
-                }
-                System.exit(0);
+        primaryStage.setOnCloseRequest(event -> {
+            Controller controller = fxmlLoader.getController();
+            if (controller.isRunning()) {
+                controller.setRunning(false);
+                controller.initializeCamera(controller);
             }
+            System.exit(0);
         });
 
     }
