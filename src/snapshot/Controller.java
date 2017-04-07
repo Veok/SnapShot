@@ -10,6 +10,7 @@ import org.opencv.objdetect.CascadeClassifier;
 import org.opencv.objdetect.Objdetect;
 import org.opencv.videoio.VideoCapture;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.Executors;
@@ -113,9 +114,9 @@ public class Controller {
     private void initializeDetection() {
         Mat grayMat = new Mat();
         MatOfRect faces = new MatOfRect();
+        File file = new File("resources", "haarcascade_frontalface_alt.xml");
         CascadeClassifier faceClassifier = new CascadeClassifier();
-        faceClassifier.load("C:\\Users\\Lelental\\OneDrive\\Dokumenty" +
-                "\\SnapShot\\src\\snapshot\\haarcascade_frontalface_alt.xml");
+        faceClassifier.load(file.getAbsolutePath());
 
         if (getMat().channels() > 1) {
             Imgproc.cvtColor(getMat(), grayMat, Imgproc.COLOR_BGR2GRAY);
